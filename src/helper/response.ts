@@ -1,10 +1,9 @@
-export const sendResponse = (res, status, responseMsg, additionalProps = {}) => {
-  const apiResponse = {
-    status: status,
-    responseMsg: responseMsg,
-    ...additionalProps,
-  };
-  res.status(status).send(apiResponse);
-};
+import { Response } from "express";
 
-module.exports = { sendResponse };
+export const sendResponse = (res: Response, statusCode: number, status: string, responseMsg?: string, additionalProps: any = {}) => {
+  res.status(statusCode).json({
+    status: status,
+    message: responseMsg,
+    data: { ...additionalProps }
+  });
+};

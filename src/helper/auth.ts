@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { sendResponse } from './response';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import Token from '../models/tokens';
 
 const accessTokenSecret = process.env.JWT_SECRET || '';
 
@@ -24,7 +26,7 @@ export const authenticateToken = async (req, res, next) => {
   try {
     const user = jwt.verify(token, accessTokenSecret);
     req.user = user;
-    const isTokenValid = await checkToken(req, token, req.user);
+    const isTokenValid = await checkToken(token, req.user);
     if (!isTokenValid) sendResponse(res, 403, 'Invalid Token!!');
 
     next();
@@ -34,9 +36,17 @@ export const authenticateToken = async (req, res, next) => {
 };
 
 // Check if the Token exist in the 
-export const checkToken = async (req, token, user) => {
+export const checkToken = async (tokenString: string, user: any) => {
   try {
     // Mongo Query to select the token
+    const token = await Token.findOne({ user: user.id, token: tokenString });
+    if (token) {
+      const isTokenValid = token.expiresAt > new Date();
+      return isTokenValid ? true : false;
+    }
+    else {
+      return false;
+    }
   } catch (err) {
     console.error('Database error:', err);
     return false;
